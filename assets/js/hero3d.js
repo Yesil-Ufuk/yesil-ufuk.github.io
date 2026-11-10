@@ -16,6 +16,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 
 const canvas = document.querySelector("[data-hero3d]");
 const hero = canvas && canvas.closest(".hero");
@@ -144,9 +145,9 @@ function init() {
   scene.add(stars);
 
   /* ---------- lights ---------- */
-  const hemi = new THREE.HemisphereLight(0x2e6450, 0x060a08, 0.85);
+  const hemi = new THREE.HemisphereLight(0x4a8a70, 0x0b120f, 1.15);
   scene.add(hemi);
-  const fill = new THREE.DirectionalLight(0x9cc7b6, 0.55);   // faint cool fill from the viewer's side
+  const fill = new THREE.DirectionalLight(0xb3d8c8, 0.95);   // faint cool fill from the viewer's side
   fill.position.set(-120, 90, 260);
   scene.add(fill);
   const key = new THREE.DirectionalLight(0x9df0bf, 2.4);
@@ -190,12 +191,23 @@ function init() {
     return Math.max(y, -7);
   }
 
-  const ROCK = new THREE.Color(0x2a2824), ROCK2 = new THREE.Color(0x413c33), VEG = new THREE.Color(0x0f1d12), VEG2 = new THREE.Color(0x1d2f19), WET = new THREE.Color(0x0c0e0d);
-  const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.93, metalness: 0.0 });
+  const ROCK = new THREE.Color(0xb3aa98), ROCK2 = new THREE.Color(0xd6cdb8), VEG = new THREE.Color(0x3d5a3a), VEG2 = new THREE.Color(0x58704a), WET = new THREE.Color(0x3a3d3a);
+  // CC0 PBR rock (Poly Haven "Rock Face 03"): albedo, OpenGL normal, roughness
+  const tl = new THREE.TextureLoader();
+  const tex = (u, srgb) => { const t = tl.load(u); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = LOW ? 2 : 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const terrainMat = new THREE.MeshStandardMaterial({
+    vertexColors: true, metalness: 0.0, roughness: 1.0,
+    map: tex("assets/tex/rock_diff.jpg", true),
+    normalMap: tex("assets/tex/rock_nor.jpg"), normalScale: new THREE.Vector2(1.4, 1.4),
+    roughnessMap: tex("assets/tex/rock_rough.jpg"),
+    envMapIntensity: 0.5
+  });
   function makeIsland(I) {
     const segs = Math.max(24, Math.round(T.seg * I.detail));
     const g = new THREE.PlaneGeometry(I.rx * 2.6, I.rz * 2.6, segs, Math.max(16, Math.round(segs * I.rz / I.rx)));
     g.rotateX(-Math.PI / 2);
+    const uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * I.rx * 2.6 / 14, uv.getY(i) * I.rz * 2.6 / 14);
     const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i) + I.cx, z = p.getZ(i) + I.cz;
@@ -240,7 +252,7 @@ function init() {
   const white = new THREE.MeshStandardMaterial({ color: 0xd9e4dc, roughness: 0.55 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x1b1f1d, roughness: 0.7, metalness: 0.3 });
   const tower = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), white);
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(1.86, 1.98, 2.4, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0x5c1f1a, roughness: 0.6 }));
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(1.94, 2.08, 2.4, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0x5c1f1a, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
   band.position.y = 6.5;
   const gallery = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.45, 32), dark); gallery.position.y = 15.2;
   const lamp = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.9, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(4.0, 4.6, 3.6) }));
@@ -264,6 +276,17 @@ function init() {
     const holder = new THREE.Group(); holder.rotation.y = r; holder.add(cone); beamPivot.add(holder);
   });
   scene.add(lh);
+
+  /* ---------- image-based lighting (CC0 HDRI, Poly Haven "Kloppenheim 06") ---------- */
+  if (!LOW) {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    new RGBELoader().load("assets/tex/dawn_1k.hdr", (hdr) => {
+      const env = pmrem.fromEquirectangular(hdr).texture;
+      hdr.dispose(); pmrem.dispose();
+      terrainMat.envMap = env; white.envMap = env; terrainMat.needsUpdate = white.needsUpdate = true;
+      if (T.shadows) renderer.shadowMap.needsUpdate = true;
+    });
+  }
 
   /* ---------- water ---------- */
   const normals = new THREE.TextureLoader().load("assets/tex/waternormals.jpg", (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });

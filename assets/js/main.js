@@ -781,8 +781,7 @@
   (function initTour() {
     const host = $("[data-tour]");
     if (!host) return;
-    const cv = $('[data-scene="tour"]', host);
-    const S = cv && cv._scene ? cv._scene.state : null;
+    const slides = $$(".tour__slide", host), layer = $("[data-tour-slides]", host);
     const tabs = $$(".tour__tab", host), bars = $$(".tour__bars b", host);
     const k = $("[data-tour-k]", host), t = $("[data-tour-t]", host), d = $("[data-tour-d]", host);
     const panel = $(".tour__panel", host);
@@ -799,7 +798,7 @@
       tabs.forEach((x, n) => { x.setAttribute("aria-selected", String(n === i)); x.classList.toggle("is-active", n === i); });
       bars.forEach((b, n) => { if (n < i) G.set(b, { scaleX: 1 }); else if (n > i) G.set(b, { scaleX: 0 }); });
       if (i !== cur) {
-        if (S) sceneTo(S, +tab.dataset.sceneI, 2.2, { e: +tab.dataset.e, day: +tab.dataset.day });
+        slides.forEach((sl, n) => sl.classList.toggle("is-active", n === +tab.dataset.sceneI));
         if (!reduce && cur !== -1) {
           G.to(panel, { autoAlpha: 0, y: 12, duration: .35, ease: "power2.in", onComplete: () => { render(i); G.to(panel, { autoAlpha: 1, y: 0, duration: .7, ease: "expo.out" }); } });
         } else render(i);
@@ -821,7 +820,14 @@
     host.addEventListener("pointerleave", () => prog && visible && !reduce && prog.resume());
     ST.create({ trigger: host, start: "top 85%", end: "bottom 15%", onToggle: (self) => { visible = self.isActive; if (!prog) return; if (visible && !reduce) prog.resume(); else prog.pause(); } });
     document.addEventListener("langchange", () => { if (cur > -1) render(cur); });
-    if (S) { S.e = +tabs[0].dataset.e; S.day = +tabs[0].dataset.day; }
+    if (layer && finePointer && !reduce) {
+      host.addEventListener("pointermove", (e) => {
+        const r = host.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        layer.style.transform = `translate3d(${(-x * 18).toFixed(1)}px, ${(-y * 12).toFixed(1)}px, 0)`;
+      });
+      host.addEventListener("pointerleave", () => { layer.style.transform = ""; });
+    }
     select(0);
   })();
 

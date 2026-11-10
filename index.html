@@ -364,7 +364,24 @@
         </div>
         <div class="tour" data-tour data-reveal>
           <div class="tour__stage">
-            <canvas class="tour__canvas" data-scene="tour" aria-hidden="true"></canvas>
+            <div class="tour__slides" data-tour-slides>
+            <picture class="tour__slide is-active" data-slide="0">
+              <source type="image/webp" srcset="assets/img/tour/t0-960.webp 960w, assets/img/tour/t0-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 1400px">
+              <img src="assets/img/tour/t0-1280.jpg" alt="Ege kıyısında yamaçtaki butik resort ve sonsuzluk havuzu, şafak vakti" width="1280" height="724" loading="lazy" decoding="async">
+            </picture>
+            <picture class="tour__slide" data-slide="1">
+              <source type="image/webp" srcset="assets/img/tour/t1-960.webp 960w, assets/img/tour/t1-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 1400px">
+              <img src="assets/img/tour/t1-1280.jpg" alt="Kapadokya'da gün doğumunda sıcak hava balonları ve mağara otel terası" width="1280" height="724" loading="lazy" decoding="async">
+            </picture>
+            <picture class="tour__slide" data-slide="2">
+              <source type="image/webp" srcset="assets/img/tour/t2-960.webp 960w, assets/img/tour/t2-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 1400px">
+              <img src="assets/img/tour/t2-1280.jpg" alt="Gün doğumunda Boğaz ve tarihi yarımadanın camileriyle İstanbul silueti" width="1280" height="724" loading="lazy" decoding="async">
+            </picture>
+            <picture class="tour__slide" data-slide="3">
+              <source type="image/webp" srcset="assets/img/tour/t3-960.webp 960w, assets/img/tour/t3-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 1400px">
+              <img src="assets/img/tour/t3-1280.jpg" alt="Akdeniz kıyısında inşaat halindeki turizm tesisi ve kuleli vinçler, akşam" width="1280" height="724" loading="lazy" decoding="async">
+            </picture>
+          </div>
             <div class="tour__bars" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
             <div class="tour__panel" aria-live="polite">
               <span class="tour__k mono" data-tour-k>01</span>
@@ -411,7 +428,6 @@
   <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="assets/js/layout.js"></script>
   <script src="assets/js/i18n.js"></script>
-  <script src="assets/js/liquid.js"></script>
   <script src="assets/js/main.js"></script>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
   <script type="module" src="assets/js/hero3d.js"></script>

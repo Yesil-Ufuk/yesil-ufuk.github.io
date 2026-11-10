@@ -830,7 +830,13 @@ main { position: relative; z-index: 1; }
 
 /* ---------- Home: tourism segments ---------- */
 .tour__stage { position: relative; width: 100%; aspect-ratio: 16 / 7; min-height: 340px; max-height: 72vh; border-radius: 18px; overflow: hidden; border: 1px solid var(--rule); background: #050807; }
-.tour__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tour__slides { position: absolute; inset: -3%; will-change: transform; transition: transform 1.2s var(--ease); }
+.tour__slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.4s var(--ease); }
+.tour__slide img { width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; transform: scale(1.04); }
+.tour__slide.is-active { opacity: 1; }
+.tour__slide.is-active img { animation: kenburns 9s linear forwards; }
+@keyframes kenburns { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.13) translate3d(-1.5%, -1%, 0); } }
+@media (prefers-reduced-motion: reduce) { .tour__slide.is-active img { animation: none; } }
 .tour__stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, #050505e6 0%, #05050580 32%, transparent 58%), linear-gradient(0deg, #050505b3 0%, transparent 40%); }
 .tour__stage.no-gl { background: radial-gradient(50% 60% at 62% 60%, #8fe3a826, transparent 70%), linear-gradient(180deg, #050807, #0b1c15 60%, #050505 60.5%); }
 .tour__bars { position: absolute; z-index: 2; left: clamp(20px, 3.4vw, 44px); right: clamp(20px, 3.4vw, 44px); top: 20px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
