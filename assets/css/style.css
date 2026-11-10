@@ -329,10 +329,10 @@ main { position: relative; z-index: 1; }
 }
 @supports (min-height: 100svh) { .hero { min-height: 100svh; } }
 .hero__still, .hero__still img { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
-.hero__still img { object-fit: cover; object-position: 64% 50%; }
+.hero__still img { object-fit: cover; object-position: 62% 50%; }
 .hero__canvas { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s var(--ease); }
 .hero__canvas.is-live { opacity: 1; }
-@media (max-aspect-ratio: 1/1) { .hero__still img { object-position: 62% 50%; } }
+
 .hero::after {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(180deg, #050505b3 0%, transparent 22%, transparent 70%, var(--bg) 100%), radial-gradient(90% 70% at 18% 72%, #0505058c 0%, transparent 70%);
