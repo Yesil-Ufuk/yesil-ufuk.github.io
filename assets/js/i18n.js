@@ -90,7 +90,7 @@ window.I18N = (function () {
       "svc.label": "02 / Capabilities", "svc.h2a": "Built", "svc.h2b": "to Scale.",
       "svc.lead": "Six areas of expertise, one integrated view. Start with a single area or go end to end with us.",
       "svc.more": "Explore",
-      "aud.label": "03 / Who We Work With", "aud.h2a": "Beside You", "aud.h2b": "at Every Stage.",
+      "aud.label": "04 / Who We Work With", "aud.h2a": "Beside You", "aud.h2b": "at Every Stage.",
       "aud.lead": "It is your next step, not your company's size, that shapes our approach.",
       "aud.a1.t": "Start-ups", "aud.a1.d": "From idea to company: the right structure, the right start and a first-year roadmap.",
       "aud.a2.t": "Growing SMEs", "aud.a2.d": "From founder-dependent management to a company run by a system.",
@@ -143,6 +143,23 @@ window.I18N = (function () {
       "s.insaat.long": "Every successful project starts with the right plan. We stand on the client's side in construction and real-estate projects, keeping scope, cost and time under control from feasibility through design and delivery.",
       "s.insaat.list": "<li>Project development and feasibility studies</li><li>Budget, cost and work-programme planning</li><li>Coordination of design and delivery</li><li>Contractor and supplier selection</li><li>Progress tracking and reporting</li><li>Handover and close-out</li>",
       "svcp.insaat.label": "Construction",
+      "sc.aria": "Scenery",
+      "sc.0": "Sea",
+      "sc.1": "Cappadocia",
+      "sc.2": "Istanbul",
+      "sc.3": "Projects",
+      "tour.label": "03 / Tourism &amp; Hospitality",
+      "tour.h2a": "New Horizons",
+      "tour.h2b": "in Tourism.",
+      "tour.lead": "From concept to opening, we work alongside hotels, boutique stays and tourism projects. Choose a segment.",
+      "tour.0.t": "Coastal &amp; Resort",
+      "tour.0.d": "Concept, operating standards, season planning and guest experience for coastal hotels and resorts.",
+      "tour.1.t": "Boutique Stays",
+      "tour.1.d": "Story-driven concept, pricing and a personal guest experience for boutique hotels and rural stays.",
+      "tour.2.t": "City Hotels &amp; Agencies",
+      "tour.2.d": "Organisation structure, sales channels and revenue management for city hotels and travel agencies.",
+      "tour.3.t": "Tourism Projects",
+      "tour.3.d": "Feasibility, project planning, budget, schedule and delivery control for new tourism facilities.",
       "about.rc.hq": "Head Office", "about.rc.lang": "Working Languages", "about.rc.langv": "Türkçe · English",
 
       "ct.eyebrow": "Contact · Start a Project", "ct.h1a": "Get", "ct.h1b": "in Touch.",
@@ -183,6 +200,10 @@ window.I18N = (function () {
       const k = el.dataset.i18nContent;
       if (!origAttr.has(k)) origAttr.set(k, el.getAttribute("content"));
     });
+    document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+      const k = el.dataset.i18nAria;
+      if (!origAttr.has(k)) origAttr.set(k, el.getAttribute("aria-label"));
+    });
   }
 
   function lookup(lang, k) {
@@ -210,6 +231,11 @@ window.I18N = (function () {
       const k = el.dataset.i18nContent;
       const v = current === "tr" ? origAttr.get(k) : (D[current] && D[current][k]) || origAttr.get(k);
       if (v != null) el.setAttribute("content", v);
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+      const k = el.dataset.i18nAria;
+      const v = current === "tr" ? origAttr.get(k) : (D[current] && D[current][k]) || origAttr.get(k);
+      if (v != null) el.setAttribute("aria-label", v);
     });
     document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === current)));
     // self-referencing canonical per language (hreflang pairs: ?lang=en)

@@ -751,6 +751,80 @@
     return { render: () => { render(); paint(active || pinned || scrollActive, false); } };
   })();
 
+  /* ---------------- Landscape transitions (shared) ---------------- */
+  function sceneTo(S, i, dur, extra) {
+    if (S._tw) S._tw.kill();
+    if (S.mix > 0.5) S.a = S.b;            // settle a half-finished transition
+    S.b = i; S.mix = 0;
+    const to = Object.assign({ mix: 1 }, extra || {});
+    if (reduce) { Object.assign(S, to); S.a = i; S.mix = 0; return; }
+    S._tw = G.to(S, Object.assign(to, { duration: dur, ease: "power2.inOut", onComplete: () => { S.a = i; S.mix = 0; } }));
+  }
+
+  /* ---------------- Hero: landscape switcher ---------------- */
+  (function initHeroScenes() {
+    const wrap = $("[data-scene-switch]"), cv = $("[data-horizon]");
+    if (!wrap || !cv || !cv._scene || cv.dataset.gl !== "on") { if (wrap) wrap.hidden = true; return; }
+    const S = cv._scene.state, btns = $$("[data-sc]", wrap);
+    let cur = 0, auto = !reduce, timer = null;
+    const mark = (i) => btns.forEach((b, k) => {
+      b.setAttribute("aria-selected", String(k === i));
+      b.classList.toggle("is-auto", auto && k === i);
+    });
+    const go = (i) => { if (i === cur) return; cur = i; mark(i); sceneTo(S, i, 1.9); };
+    const loop = () => { clearTimeout(timer); if (!auto) return; timer = setTimeout(() => { go((cur + 1) % btns.length); loop(); }, 9000); };
+    btns.forEach((b, k) => b.addEventListener("click", () => { auto = false; clearTimeout(timer); go(k); mark(k); }));
+    mark(0); loop();
+  })();
+
+  /* ---------------- Home: tourism segments (stories-style) ---------------- */
+  (function initTour() {
+    const host = $("[data-tour]");
+    if (!host) return;
+    const cv = $('[data-scene="tour"]', host);
+    const S = cv && cv._scene ? cv._scene.state : null;
+    const tabs = $$(".tour__tab", host), bars = $$(".tour__bars b", host);
+    const k = $("[data-tour-k]", host), t = $("[data-tour-t]", host), d = $("[data-tour-d]", host);
+    const panel = $(".tour__panel", host);
+    const DUR = 7;
+    let cur = -1, prog = null, visible = false;
+    const render = (i) => {
+      const tab = tabs[i];
+      k.textContent = `${$(".mono", tab).textContent} / 0${tabs.length}`;
+      t.innerHTML = $("b", tab).innerHTML;
+      d.innerHTML = $(".tour__src", tab).innerHTML;
+    };
+    const select = (i, user) => {
+      const tab = tabs[i];
+      tabs.forEach((x, n) => { x.setAttribute("aria-selected", String(n === i)); x.classList.toggle("is-active", n === i); });
+      bars.forEach((b, n) => { if (n < i) G.set(b, { scaleX: 1 }); else if (n > i) G.set(b, { scaleX: 0 }); });
+      if (i !== cur) {
+        if (S) sceneTo(S, +tab.dataset.sceneI, 2.2, { e: +tab.dataset.e, day: +tab.dataset.day });
+        if (!reduce && cur !== -1) {
+          G.to(panel, { autoAlpha: 0, y: 12, duration: .35, ease: "power2.in", onComplete: () => { render(i); G.to(panel, { autoAlpha: 1, y: 0, duration: .7, ease: "expo.out" }); } });
+        } else render(i);
+      }
+      cur = i;
+      if (prog) prog.kill();
+      G.set(bars[i], { scaleX: 0 });
+      prog = G.to(bars[i], { scaleX: 1, duration: DUR, ease: "none", paused: !visible || reduce, onComplete: () => select((i + 1) % tabs.length) });
+      if (user) tab.focus({ preventScroll: true });
+    };
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => select(i));
+      tab.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") { e.preventDefault(); select((cur + 1) % tabs.length, true); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); select((cur + tabs.length - 1) % tabs.length, true); }
+      });
+    });
+    host.addEventListener("pointerenter", () => prog && prog.pause());
+    host.addEventListener("pointerleave", () => prog && visible && !reduce && prog.resume());
+    ST.create({ trigger: host, start: "top 85%", end: "bottom 15%", onToggle: (self) => { visible = self.isActive; if (!prog) return; if (visible && !reduce) prog.resume(); else prog.pause(); } });
+    document.addEventListener("langchange", () => { if (cur > -1) render(cur); });
+    if (S) { S.e = +tabs[0].dataset.e; S.day = +tabs[0].dataset.day; }
+    select(0);
+  })();
+
   /* ---------------- About: pick dawn / zenith / dusk ---------------- */
   (function initDirection() {
     const host = $("[data-dir]");
