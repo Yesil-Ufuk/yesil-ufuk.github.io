@@ -258,7 +258,7 @@ function init() {
   const lamp = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.9, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(4.0, 4.6, 3.6) }));
   lamp.position.y = 16.4;
   const roof = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.6, 24), dark); roof.position.y = 18.15;
-  [tower, band, gallery, roof].forEach((m) => { m.castShadow = m.receiveShadow = T.shadows; });
+  [tower, band, gallery, roof].forEach((m) => { m.castShadow = T.shadows; m.receiveShadow = false; });   // no self-shadow acne on the thin tower
   lh.add(tower, band, gallery, lamp, roof);
   const lampLight = new THREE.PointLight(0xc9ffd9, 30, 90, 2);
   lampLight.position.y = 16.4; lh.add(lampLight);
