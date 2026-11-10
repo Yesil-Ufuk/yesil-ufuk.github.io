@@ -122,13 +122,18 @@ vec3 sky(vec2 uv, float aspect, bool detail){
       c += vec3(0.62, 1.0, 0.78) * m * step(0.72, rnd) * tw * exp(-r * 3.0) * (0.55 - fl * 0.2);
     }
   }
-  // the sun itself: luminous mint disc, hotter towards the top, glowing rim
-  float disc = smoothstep(uR, uR - 0.012, r);
-  float lat = clamp((uv.y - uSun.y) / uR * 0.5 + 0.5, 0.0, 1.0);
-  vec3 sunCol = mix(vec3(0.30, 0.78, 0.48), vec3(0.88, 1.00, 0.92), pow(lat, 0.9));
-  sunCol += vec3(0.30, 0.80, 0.50) * pow(clamp(1.0 - r / uR, 0.0, 1.0), 2.0) * 0.18;
-  c = mix(c, sunCol, disc * step(0.0, h));
-  c += vec3(0.50, 1.00, 0.70) * exp(-max(r - uR, 0.0) * 38.0 * k) * 0.35 * step(0.0, h) * step(uR * 0.9, r);
+  // the sun itself: an emissive orb — saturated mint body, white-hot core,
+  // bright limb that melts into a soft corona (no hard line, no rings)
+  float aa = 1.6 / uRes.y;                                  // ~1.5 px antialiased edge
+  float disc = smoothstep(uR + aa, uR - aa, r) * step(0.0, h);
+  float q = clamp(r / uR, 0.0, 1.0);
+  float lat = clamp((uv.y - uSun.y) / uR, 0.0, 1.0);
+  vec3 body = mix(vec3(0.30, 0.80, 0.50), vec3(0.56, 0.98, 0.72), lat * 0.6);
+  body = mix(body, vec3(0.90, 1.00, 0.93), pow(1.0 - q, 2.4) * 0.6);    // hot centre
+  body += vec3(0.30, 0.85, 0.52) * smoothstep(0.72, 1.0, q) * 0.45;      // glowing limb
+  c = mix(c, body, disc);
+  float od = max(r - uR, 0.0);
+  c += vec3(0.45, 1.00, 0.66) * (exp(-od * 26.0 * k) * 0.42 + exp(-od * 7.0 * k) * 0.14) * step(0.0, h);
   return c;
 }
 
@@ -186,7 +191,7 @@ void main(){
 
   vec2 v = (uv - vec2(0.5, 0.55)) * vec2(aspect * 0.7, 1.0);
   col *= 1.0 - smoothstep(0.55, 1.35, length(v)) * 0.65;
-  col = col / (1.0 + col * 0.25);
+  col = col / (1.0 + col * 0.2);
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -240,7 +245,7 @@ void main(){
       const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
       last = now; time += dt;
       frames++; if (dt > 0.034) slow++;
-      if (frames === 90) { if (slow > 45 && scale > 0.32) { scale *= 0.8; resize(); } frames = 0; slow = 0; }
+      if (frames === 90) { if (slow > 45 && scale > 0.5) { scale = Math.max(0.48, scale * 0.85); resize(); } frames = 0; slow = 0; }
       mx += (px - mx) * 0.08; my += (py - my) * 0.08;
       stir *= Math.exp(-dt * 1.4);
       const s = opt.state(W / H, mx);
