@@ -37,19 +37,25 @@ window.SITE = {
     { id: "kurulus", n: "01" },
     { id: "strateji", n: "02" },
     { id: "operasyon", n: "03" },
-    { id: "finans", n: "04" }
+    { id: "finans", n: "04" },
+    { id: "turizm", n: "05" },
+    { id: "insaat", n: "06" }
   ];
   const svcTitles = {
     kurulus: "Şirket Kuruluşu &amp; Organizasyon",
     strateji: "Stratejik Yönetim",
     operasyon: "Operasyon &amp; Süreç Yönetimi",
-    finans: "Finansal Yönetim Danışmanlığı"
+    finans: "Finansal Yönetim Danışmanlığı",
+    turizm: "Turizm &amp; Konaklama Danışmanlığı",
+    insaat: "İnşaat &amp; Proje Yönetimi Danışmanlığı"
   };
   const svcDesc = {
     kurulus: "Doğru şirket türü ve net bir kuruluş planı.",
     strateji: "İş planı, fizibilite ve büyüme yol haritası.",
     operasyon: "Roller, iş akışları ve performans göstergeleri.",
-    finans: "Bütçe, maliyet analizi ve yönetim raporlaması."
+    finans: "Bütçe, maliyet analizi ve yönetim raporlaması.",
+    turizm: "Otel, acente ve turizm işletmeleri için konsept, kuruluş ve operasyon.",
+    insaat: "Proje geliştirme, fizibilite, planlama ve süreç takibi."
   };
 
   const langBtns = `
@@ -73,7 +79,7 @@ window.SITE = {
             <svg class="chev" viewBox="0 0 8 8" aria-hidden="true"><path d="M1 2.5l3 3 3-3" fill="none" stroke="currentColor"/></svg>
           </button>
           <div class="mega" id="mega" data-mega>
-            <div class="mega__head mono"><span data-i18n="mega.label">Hizmet Alanları</span><span>04</span></div>
+            <div class="mega__head mono"><span data-i18n="mega.label">Hizmet Alanları</span><span>06</span></div>
             ${services.map((s) => `
               <a class="mega__a" href="hizmetler.html#${s.id}" data-sound>
                 <span class="n mono">${s.n}</span>
@@ -173,7 +179,7 @@ window.SITE = {
         <div>
           <h4 class="mono"><span>04 /</span> ${S.brand}</h4>
           <p class="ftr__tag" data-i18n="ftr.tag">Ufku netleştirenler.</p>
-          <p class="ftr__blurb" data-i18n="ftr.blurb">Şirketlere kuruluş, strateji, operasyon ve finans alanlarında uçtan uca danışmanlık sunan İstanbul merkezli bir işletme danışmanlığı firması.</p>
+          <p class="ftr__blurb" data-i18n="ftr.blurb">Şirketlere kuruluş, strateji, operasyon, finans, turizm ve inşaat projelerinde uçtan uca danışmanlık sunan İstanbul merkezli bir işletme danışmanlığı firması.</p>
         </div>
       </div>
       <div class="ftr__word" aria-hidden="true" data-ftr-word>${[..."Yeşil Ufuk"].map((c) => `<span>${c === " " ? "&nbsp;" : c}</span>`).join("")}</div>
