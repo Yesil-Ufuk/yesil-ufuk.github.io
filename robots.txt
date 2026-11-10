@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /kvkk.html
+
+Sitemap: https://yesil-ufuk.github.io/sitemap.xml
