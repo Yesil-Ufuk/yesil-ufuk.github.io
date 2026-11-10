@@ -30,6 +30,8 @@
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="image" type="image/webp" href="assets/img/hero-2560.webp" imagesrcset="assets/img/hero-1280.webp 1280w, assets/img/hero-2560.webp 2560w" imagesizes="100vw">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -163,7 +165,11 @@
   <main id="main">
     <!-- ============ HERO ============ -->
     <section class="hero" data-hero aria-labelledby="hero-h">
-      <canvas class="hero__canvas" data-horizon aria-hidden="true"></canvas>
+      <picture class="hero__still" aria-hidden="true">
+        <source type="image/webp" srcset="assets/img/hero-1280.webp 1280w, assets/img/hero-2560.webp 2560w" sizes="100vw">
+        <img src="assets/img/hero-1280.jpg" alt="" width="1280" height="720" fetchpriority="high" decoding="async">
+      </picture>
+      <canvas class="hero__canvas" data-hero3d aria-hidden="true"></canvas>
       <div class="hero__cols" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="wrap">
         <div class="hero__grid">
@@ -184,12 +190,7 @@
         </div>
         <div class="hero__meta mono" data-hero-fade>
           <span>41.0°N · 28.8°E</span>
-          <div class="scene-switch" role="tablist" aria-label="Manzara" data-i18n-aria="sc.aria" data-scene-switch>
-            <button type="button" role="tab" aria-selected="true" data-sc="0"><span data-i18n="sc.0">Deniz</span><i aria-hidden="true"></i></button>
-            <button type="button" role="tab" aria-selected="false" data-sc="1"><span data-i18n="sc.1">Kapadokya</span><i aria-hidden="true"></i></button>
-            <button type="button" role="tab" aria-selected="false" data-sc="2"><span data-i18n="sc.2">İstanbul</span><i aria-hidden="true"></i></button>
-            <button type="button" role="tab" aria-selected="false" data-sc="3"><span data-i18n="sc.3">Proje</span><i aria-hidden="true"></i></button>
-          </div>
+          <span>TR · EN</span>
           <span><span data-i18n="home.time">İstanbul</span> · <span data-clock>--:--:--</span></span>
           <span class="scroll-cue"><i aria-hidden="true"></i><span data-i18n="home.scroll">Kaydır</span></span>
         </div>
@@ -411,7 +412,8 @@
   <script src="assets/js/layout.js"></script>
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/liquid.js"></script>
-  <script src="assets/js/horizon.js"></script>
   <script src="assets/js/main.js"></script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <script type="module" src="assets/js/hero3d.js"></script>
 </body>
 </html>
