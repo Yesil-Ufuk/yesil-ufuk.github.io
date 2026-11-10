@@ -83,7 +83,7 @@ function init() {
         void main(){
           vec3 d = normalize(vDir);
           float h = d.y;
-          float az = dot(normalize(d.xz + 1e-5), normalize(uSun.xz + 1e-5)) * 0.5 + 0.5;
+          float az = clamp(dot(normalize(d.xz + 1e-5), normalize(uSun.xz + 1e-5)) * 0.5 + 0.5, 0.0, 1.0);
           vec3 zen = vec3(0.0035, 0.0085, 0.0075);
           vec3 hor = mix(vec3(0.008, 0.026, 0.021), vec3(0.05, 0.17, 0.115), pow(az, 8.0));
           vec3 c = mix(hor, zen, pow(clamp(h, 0.0, 1.0), 0.42));
@@ -92,14 +92,17 @@ function init() {
           c += vec3(0.18, 0.56, 0.36) * exp(-ang * 9.0) * 0.32;                   // wide halo
           c += vec3(0.45, 1.00, 0.68) * exp(-ang * 55.0) * (0.55 + uLow * 0.6);   // inner glow
           // god rays: soft angular streaks around the sun
-          float a2 = atan(d.y - uSun.y, (d.x - uSun.x) * 1.0);
+          float a2 = atan(d.y - uSun.y, (d.x - uSun.x) + 1e-6);
           float rays = (0.5 + 0.5 * sin(a2 * 17.0 + uTime * 0.05)) * (0.5 + 0.5 * sin(a2 * 31.0 - uTime * 0.03 + 1.7)) * (0.6 + 0.4 * sin(a2 * 5.0 + 0.6));
-          c += vec3(0.10, 0.32, 0.21) * pow(rays, 1.6) * exp(-ang * 6.0) * smoothstep(0.035, 0.08, ang) * smoothstep(-0.02, 0.06, h) * 0.22;
+          c += vec3(0.10, 0.32, 0.21) * pow(clamp(rays, 0.0, 1.0), 1.6) * exp(-ang * 6.0) * smoothstep(0.035, 0.08, ang) * smoothstep(-0.02, 0.06, h) * 0.22;
           float R = 0.034;
-          float disc = smoothstep(R + 0.0012, R - 0.0012, ang);
-          vec3 sc = mix(vec3(0.42, 0.95, 0.62), vec3(1.7, 2.0, 1.8), pow(smoothstep(R, 0.0, ang), 0.7));
+          float disc = 1.0 - smoothstep(R - 0.0012, R + 0.0012, ang);
+          vec3 sc = mix(vec3(0.42, 0.95, 0.62), vec3(1.7, 2.0, 1.8), pow(clamp(1.0 - ang / R, 0.0, 1.0), 0.7));
           c = mix(c, sc, disc);
-          gl_FragColor = vec4(c * uDim, 1.0);
+          c *= uDim;
+          // guard: a NaN/Inf here would be smeared by bloom into flickering black blocks
+          if (!(c.r >= 0.0 && c.g >= 0.0 && c.b >= 0.0) || max(c.r, max(c.g, c.b)) > 60.0) c = vec3(0.0);
+          gl_FragColor = vec4(c, 1.0);
         }`
     })
   );
@@ -129,7 +132,7 @@ function init() {
       void main(){
         vec3 d = normalize(position);
         float tw = 0.55 + 0.45 * sin(uTime * (0.8 + fract(aPhase) * 2.4) + aPhase * 9.0);
-        float glare = smoothstep(0.55, 0.05, acos(clamp(dot(d, uSun), -1.0, 1.0)));
+        float glare = 1.0 - smoothstep(0.05, 0.55, acos(clamp(dot(d, uSun), -1.0, 1.0)));
         vA = tw * smoothstep(0.03, 0.22, d.y) * (1.0 - glare);
         gl_PointSize = aSize * uPR * (0.85 + 0.3 * tw);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -138,8 +141,9 @@ function init() {
       uniform float uDim; varying float vA;
       void main(){
         vec2 q = gl_PointCoord - 0.5; float r = length(q);
-        float a = smoothstep(0.5, 0.0, r);
-        gl_FragColor = vec4(vec3(0.86, 1.0, 0.93) * a * vA * 1.6 * uDim, a * vA);
+        float a = 1.0 - smoothstep(0.0, 0.5, r);
+        float k = clamp(a * vA, 0.0, 1.0);
+        gl_FragColor = vec4(vec3(0.86, 1.0, 0.93) * k * 1.6 * uDim, k);
       }`
   }));
   scene.add(stars);
@@ -249,25 +253,25 @@ function init() {
   lh.position.set(lhX, lhY - 0.6, lhZ);
   const prof = [];
   for (let i = 0; i <= 12; i++) { const t = i / 12; prof.push(new THREE.Vector2(2.3 - 0.85 * t + (i === 0 ? 0.4 : 0), t * 15)); }
-  const white = new THREE.MeshStandardMaterial({ color: 0xd9e4dc, roughness: 0.55 });
+  const white = new THREE.MeshStandardMaterial({ color: 0x8e9a93, roughness: 0.8 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x1b1f1d, roughness: 0.7, metalness: 0.3 });
   const tower = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), white);
   const band = new THREE.Mesh(new THREE.CylinderGeometry(1.94, 2.08, 2.4, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0x5c1f1a, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
   band.position.y = 6.5;
   const gallery = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.45, 32), dark); gallery.position.y = 15.2;
-  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.9, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(4.0, 4.6, 3.6) }));
+  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.9, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.8, 1.45) }));
   lamp.position.y = 16.4;
   const roof = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.6, 24), dark); roof.position.y = 18.15;
   [tower, band, gallery, roof].forEach((m) => { m.castShadow = T.shadows; m.receiveShadow = false; });   // no self-shadow acne on the thin tower
   lh.add(tower, band, gallery, lamp, roof);
-  const lampLight = new THREE.PointLight(0xc9ffd9, 30, 90, 2);
+  const lampLight = new THREE.PointLight(0xc9ffd9, 18, 90, 2);
   lampLight.position.y = 16.4; lh.add(lampLight);
   // sweeping beam: two soft additive cones
   const beamMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     uniforms: { uI: { value: 1 } },
     vertexShader: `varying float vT; varying vec3 vN; varying vec3 vV; void main(){ vT = uv.y; vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float uI; varying float vT; varying vec3 vN; varying vec3 vV; void main(){ float edge = pow(abs(dot(vN, vV)), 1.6); float a = pow(vT, 2.2) * edge * 0.22 * uI; gl_FragColor = vec4(vec3(0.7, 1.0, 0.82) * a, a); }`
+    fragmentShader: `uniform float uI; varying float vT; varying vec3 vN; varying vec3 vV; void main(){ float edge = pow(abs(dot(vN, vV)), 1.6); float a = pow(clamp(vT, 0.0, 1.0), 2.2) * edge * 0.22 * uI; gl_FragColor = vec4(vec3(0.7, 1.0, 0.82) * a, a); }`
   });
   const beamPivot = new THREE.Group(); beamPivot.position.y = 16.4; lh.add(beamPivot);
   [0, Math.PI].forEach((r) => {
@@ -304,7 +308,7 @@ function init() {
   if (T.bloom) {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.5, 0.9);
+    bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.45, 0.92);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
   }
@@ -370,7 +374,7 @@ function init() {
     wu.distortionScale.value = 2.6 + stir * 3.5;
     wu.sunDirection.value.copy(sun);
     beamPivot.rotation.y = time * 0.55;
-    lampLight.intensity = 30 + Math.sin(time * 7.0) * 2;
+    lampLight.intensity = 18;
 
     if (composer) composer.render(); else renderer.render(scene, camera);
     if (first) { first = false; canvas.classList.add("is-live"); if (hero) hero.classList.add("has-3d"); }
