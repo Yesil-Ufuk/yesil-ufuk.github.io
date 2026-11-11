@@ -1,6 +1,6 @@
 /* =========================================================
    i18n — Turkish lives in the HTML (default, SEO).
-   EN / RU are swapped in from the dictionaries below.
+   English is swapped in from the dictionary below.
    ========================================================= */
 window.I18N = (function () {
   const LANGS = ["tr", "en"];
@@ -10,6 +10,7 @@ window.I18N = (function () {
   const JS = {
     tr: {
       "sound.on": "Ses Açık", "sound.off": "Ses Kapalı",
+      "tour.pause": "Slaytı duraklat", "tour.play": "Slaytı oynat",
       "form.err.name": "Lütfen adınızı yazın.",
       "form.err.email": "Geçerli bir e-posta adresi yazın.",
       "form.err.msg": "Kısaca ihtiyacınızı anlatın.",
@@ -21,6 +22,7 @@ window.I18N = (function () {
     },
     en: {
       "sound.on": "Sound On", "sound.off": "Sound Off",
+      "tour.pause": "Pause slideshow", "tour.play": "Play slideshow",
       "form.err.name": "Please enter your name.",
       "form.err.email": "Please enter a valid e-mail address.",
       "form.err.msg": "Briefly describe what you need.",
@@ -148,18 +150,18 @@ window.I18N = (function () {
       "sc.1": "Cappadocia",
       "sc.2": "Istanbul",
       "sc.3": "Projects",
-      "tour.label": "03 / Tourism &amp; Hospitality",
-      "tour.h2a": "New Horizons",
-      "tour.h2b": "in Tourism.",
-      "tour.lead": "From concept to opening, we work alongside hotels, boutique stays and tourism projects. Choose a segment.",
-      "tour.0.t": "Coastal &amp; Resort",
-      "tour.0.d": "Concept, operating standards, season planning and guest experience for coastal hotels and resorts.",
-      "tour.1.t": "Boutique Stays",
-      "tour.1.d": "Story-driven concept, pricing and a personal guest experience for boutique hotels and rural stays.",
-      "tour.2.t": "City Hotels &amp; Agencies",
-      "tour.2.d": "Organisation structure, sales channels and revenue management for city hotels and travel agencies.",
-      "tour.3.t": "Tourism Projects",
-      "tour.3.d": "Feasibility, project planning, budget, schedule and delivery control for new tourism facilities.",
+      "tour.label": "03 / Hospitality Expertise",
+      "tour.h2a": "Creating Value.",
+      "tour.h2b": "In Hospitality.",
+      "tour.lead": "From coastal resorts to city hotels, we connect concept, investment and operations to bring out each property's potential.",
+      "tour.0.t": "Resorts &amp; Coastal Hotels",
+      "tour.0.d": "We unlock coastal properties' potential through a clear concept, strong seasonal planning and a consistent guest experience.",
+      "tour.1.t": "Boutique &amp; Experience Hotels",
+      "tour.1.d": "We turn a place's story into a distinctive brand, bringing concept, pricing and personal service into one memorable experience.",
+      "tour.2.t": "City &amp; Business Hotels",
+      "tour.2.d": "We align sales channels, revenue management and operations around one goal: sustainable performance for city hotels.",
+      "tour.3.t": "Investment &amp; Development",
+      "tour.3.d": "We turn an idea into a viable investment, planning the route to opening through feasibility, budget and schedule control.",
       "about.rc.hq": "Head Office", "about.rc.lang": "Working Languages", "about.rc.langv": "Türkçe · English",
 
       "ct.eyebrow": "Contact · Start a Project", "ct.h1a": "Get", "ct.h1b": "in Touch.",
@@ -181,6 +183,7 @@ window.I18N = (function () {
       "form.stage.opts": "<option value=\"\">Select</option><option>Being formed</option><option>1–10 employees</option><option>10–50 employees</option><option>50+ employees</option>",
       "form.kvkk": "I have read the <a href=\"kvkk.html\">Privacy Notice (KVKK)</a> and consent to my personal data being processed for this request.",
       "form.note": "All information is kept confidential", "form.submit": "Send project brief",
+      "form.delivery": "This form opens a draft in your e-mail app. Send that message to submit your request.",
 
       "kvkk.eyebrow": "Legal · Law No. 6698", "kvkk.h1": "Privacy Notice.",
       "kvkk.notice": "This notice is provided in Turkish, which is the legally binding version under Turkish law."

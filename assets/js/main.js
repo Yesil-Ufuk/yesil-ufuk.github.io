@@ -190,15 +190,19 @@
     if (!burger || !mnav) return;
     const links = $$(".mnav__list li > a", mnav);
     const foot = $(".mnav__foot", mnav);
+    mnav.inert = true;
     let isOpen = false;
     const set = (v) => {
       isOpen = v;
       burger.setAttribute("aria-expanded", String(v));
       mnav.setAttribute("aria-hidden", String(!v));
+      mnav.inert = !v;
+      $$("main, .ftr, .cta").forEach((el) => { el.inert = v; });
       html.classList.toggle("menu-open", v);
       if (v) { lenisRef && lenisRef.stop(); header && header.classList.remove("is-hidden"); }
       else lenisRef && lenisRef.start();
       const g = window.gsap;
+      if (g) g.killTweensOf([mnav, ...links, foot].filter(Boolean));
       if (!g || reduce) {
         mnav.style.visibility = v ? "visible" : "hidden";
         mnav.style.clipPath = v ? "inset(0 0 0% 0)" : "inset(0 0 100% 0)";
@@ -215,7 +219,16 @@
       }
     };
     burger.addEventListener("click", () => set(!isOpen));
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen) { set(false); burger.focus(); } });
+    document.addEventListener("keydown", (e) => {
+      if (!isOpen) return;
+      if (e.key === "Escape") { set(false); burger.focus(); }
+      if (e.key === "Tab") {
+        const controls = [burger, ...$$("a[href], button", mnav)];
+        const index = controls.indexOf(document.activeElement);
+        if (e.shiftKey && index <= 0) { e.preventDefault(); controls[controls.length - 1].focus(); }
+        else if (!e.shiftKey && (index < 0 || index === controls.length - 1)) { e.preventDefault(); burger.focus(); }
+      }
+    });
     $$("a", mnav).forEach((a) => a.addEventListener("click", () => isOpen && set(false)));
     window.addEventListener("resize", () => { if (isOpen && window.innerWidth > 1180) set(false); });
   }
@@ -269,7 +282,30 @@
   const heroLines = $$("[data-hero] .split .ln > span");
   const heroFade = $$("[data-hero] [data-hero-fade]");
 
+  function initStaggers() {
+    $$("[data-stagger]").forEach((wrap) => {
+      const kids = Array.from(wrap.children);
+      if (wrap._motionChildren && kids.every((kid, i) => kid === wrap._motionChildren[i])) return;
+      (wrap._motionTriggers || []).forEach((trigger) => trigger.kill());
+      wrap._motionChildren = kids;
+      if (reduce || wrap._motionStarted) { G.set(kids, { autoAlpha: 1, y: 0 }); return; }
+      G.set(kids, { autoAlpha: 0, y: 28 });
+      wrap._motionTriggers = ST.batch(kids, {
+        start: "top 92%", once: true,
+        onEnter: (batch) => {
+          wrap._motionStarted = true;
+          G.to(batch, { autoAlpha: 1, y: 0, duration: .9, ease: "expo.out", stagger: .08 });
+        }
+      });
+    });
+  }
+
   function initReveals() {
+    if (reduce) {
+      G.set($$(".split .ln > span, [data-reveal], [data-stagger] > *, [data-ftr-word] span, .svc__num span"), { autoAlpha: 1, x: 0, y: 0, yPercent: 0 });
+      G.set($$("[data-line], .step__bar"), { scaleX: 1 });
+      return;
+    }
     // masked lines (non-hero)
     $$(".split").forEach((el) => {
       if (el.closest("[data-hero]")) return;
@@ -287,14 +323,7 @@
       ST.create({ trigger: el, start: "top 92%", once: true, onEnter: () => G.to(el, { autoAlpha: 1, y: 0, duration: 1, ease: "expo.out", delay: +(el.dataset.delay || 0) }) });
     });
     // stagger groups
-    $$("[data-stagger]").forEach((wrap) => {
-      const kids = Array.from(wrap.children);
-      G.set(kids, { autoAlpha: 0, y: 40 });
-      ST.batch(kids, {
-        start: "top 92%", once: true,
-        onEnter: (batch) => G.to(batch, { autoAlpha: 1, y: 0, duration: 1.1, ease: "expo.out", stagger: .09 })
-      });
-    });
+    initStaggers();
     // scramble labels
     $$("[data-scramble]").forEach((el) => {
       if (el.closest("[data-hero]")) return;
@@ -302,6 +331,7 @@
     });
     // horizontal rules
     $$("[data-line]").forEach((el) => {
+      if (el.closest("[data-hero]")) return;
       G.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.6, ease: "expo.inOut", scrollTrigger: { trigger: el, start: "top 95%", once: true } });
     });
     // steps
@@ -330,6 +360,12 @@
 
   /* ---------------- Hero intro ---------------- */
   function heroIntro(delay) {
+    if (reduce) {
+      G.set(heroLines, { yPercent: 0 });
+      G.set(heroFade, { autoAlpha: 1, y: 0 });
+      G.set($$("[data-hero] [data-line]"), { scaleX: 1 });
+      return;
+    }
     if (heroLines.length) {
       G.fromTo(heroLines, { yPercent: 125 }, { yPercent: 0, duration: 1.2, ease: "expo.out", stagger: .08, delay: delay + .14, overwrite: true });
     }
@@ -370,6 +406,7 @@
         return;
       }
       if (samePage && !url.hash) { e.preventDefault(); scrollTo(0, 0); return; }
+      if (reduce) return;
       e.preventDefault();
       if (label) label.textContent = (a.textContent || "").replace(/\s+/g, " ").replace(/[→↗]/g, "").trim().slice(0, 48) || window.SITE.brand;
       G.fromTo(curtain, { yPercent: 105 }, { yPercent: 0, duration: .6, ease: "power3.inOut", onComplete: () => { location.href = url.href; } });
@@ -506,7 +543,16 @@
     const CTRL = ["c1", "c2", "c3"];
     const ORDER = [...FLOW, ...CTRL];
     let vertical = false, active = null, pinned = null, scrollActive = null;
-    let tl = null, live = false, raf = 0, pulses = [];
+    let tl = null, live = false, raf = 0, pulses = [], pulseAllowed = false, sceneVisible = false;
+    function syncPulses() {
+      const next = pulseAllowed && sceneVisible && !document.hidden && !reduce;
+      if (next === live) return;
+      live = next;
+      if (live) loopPulses();
+      else { cancelAnimationFrame(raf); pulses.forEach((p) => { p.el.style.opacity = "0"; }); }
+    }
+    new IntersectionObserver(([entry]) => { sceneVisible = entry.isIntersecting; syncPulses(); }).observe(stage);
+    document.addEventListener("visibilitychange", syncPulses);
 
     function layout(v) {
       if (!v) {
@@ -563,12 +609,14 @@
     };
 
     function render() {
-      cancelAnimationFrame(raf); live = false;
+      cancelAnimationFrame(raf); live = false; pulseAllowed = false;
       if (tl) { tl.scrollTrigger && tl.scrollTrigger.kill(); tl.kill(); tl = null; }
       const r = stage.getBoundingClientRect();
       vertical = r.width < 720 || r.width / Math.max(1, r.height) < 1.05;
       const Ly = layout(vertical), tx = L();
       svg.innerHTML = "";
+      const title = el("title", { id: "mod-dg-t" }, svg);
+      title.textContent = T("mod.dg", "Kurumsal İşletim Modeli");
       svg.setAttribute("viewBox", `0 0 ${Ly.W} ${Ly.H}`);
       svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
       svg.classList.toggle("is-vertical", vertical);
@@ -644,7 +692,7 @@
       const inner = (id) => $("[data-motion='node']", nodeEls[id]);
 
       const stagePos = {};
-      FLOW.forEach((id, i) => (stagePos[id] = .08 + i * .12));
+      FLOW.forEach((id, i) => (stagePos[id] = i * .14));
       CTRL.forEach((id, i) => (stagePos[id] = .64 + i * .05));
       const showAll = () => {
         G.set(lanesEls, { autoAlpha: 1 });
@@ -653,11 +701,20 @@
         G.set(loopT, { autoAlpha: 1 });
       };
 
-      if (reduce) { showAll(); setScrollActive(null); return; }
+      if (reduce) {
+        showAll();
+        if (out.count) out.count.textContent = String(ORDER.length).padStart(2, "0");
+        if (out.track) out.track.style.transform = "scaleX(1)";
+        setScrollActive(null);
+        return;
+      }
 
       G.set(lanesEls, { autoAlpha: 0 });
       G.set(loopT, { autoAlpha: 0 });
       G.set(ORDER.map(inner), { autoAlpha: 0, y: 14, scale: .94, transformOrigin: "50% 50%" });
+      G.set(inner(FLOW[0]), { autoAlpha: 1, y: 0, scale: 1 });
+      if (out.count) out.count.textContent = "01";
+      setScrollActive(FLOW[0]);
 
       tl = G.timeline({
         defaults: { ease: "none" },
@@ -667,11 +724,11 @@
             const p = self.progress;
             if (out.track) out.track.style.transform = `scaleX(${p.toFixed(4)})`;
             let cur = null, idx = 0;
-            ORDER.forEach((id, i) => { if (p >= stagePos[id] + .02) { cur = id; idx = i + 1; } });
+            ORDER.forEach((id, i) => { if (p >= stagePos[id] + (i === 0 ? 0 : .02)) { cur = id; idx = i + 1; } });
             if (out.count) out.count.textContent = String(idx).padStart(2, "0");
             setScrollActive(cur);
-            const shouldLive = p > .93;
-            if (shouldLive !== live) { live = shouldLive; if (live) loopPulses(); }
+            pulseAllowed = p > .93;
+            syncPulses();
           }
         }
       });
@@ -777,60 +834,6 @@
     mark(0); loop();
   })();
 
-  /* ---------------- Home: tourism segments (stories-style) ---------------- */
-  (function initTour() {
-    const host = $("[data-tour]");
-    if (!host) return;
-    const slides = $$(".tour__slide", host), layer = $("[data-tour-slides]", host);
-    const tabs = $$(".tour__tab", host), bars = $$(".tour__bars b", host);
-    const k = $("[data-tour-k]", host), t = $("[data-tour-t]", host), d = $("[data-tour-d]", host);
-    const panel = $(".tour__panel", host);
-    const DUR = 7;
-    let cur = -1, prog = null, visible = false;
-    const render = (i) => {
-      const tab = tabs[i];
-      k.textContent = `${$(".mono", tab).textContent} / 0${tabs.length}`;
-      t.innerHTML = $("b", tab).innerHTML;
-      d.innerHTML = $(".tour__src", tab).innerHTML;
-    };
-    const select = (i, user) => {
-      const tab = tabs[i];
-      tabs.forEach((x, n) => { x.setAttribute("aria-selected", String(n === i)); x.classList.toggle("is-active", n === i); });
-      bars.forEach((b, n) => { if (n < i) G.set(b, { scaleX: 1 }); else if (n > i) G.set(b, { scaleX: 0 }); });
-      if (i !== cur) {
-        slides.forEach((sl, n) => sl.classList.toggle("is-active", n === +tab.dataset.sceneI));
-        if (!reduce && cur !== -1) {
-          G.to(panel, { autoAlpha: 0, y: 12, duration: .35, ease: "power2.in", onComplete: () => { render(i); G.to(panel, { autoAlpha: 1, y: 0, duration: .7, ease: "expo.out" }); } });
-        } else render(i);
-      }
-      cur = i;
-      if (prog) prog.kill();
-      G.set(bars[i], { scaleX: 0 });
-      prog = G.to(bars[i], { scaleX: 1, duration: DUR, ease: "none", paused: !visible || reduce, onComplete: () => select((i + 1) % tabs.length) });
-      if (user) tab.focus({ preventScroll: true });
-    };
-    tabs.forEach((tab, i) => {
-      tab.addEventListener("click", () => select(i));
-      tab.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowRight") { e.preventDefault(); select((cur + 1) % tabs.length, true); }
-        if (e.key === "ArrowLeft") { e.preventDefault(); select((cur + tabs.length - 1) % tabs.length, true); }
-      });
-    });
-    host.addEventListener("pointerenter", () => prog && prog.pause());
-    host.addEventListener("pointerleave", () => prog && visible && !reduce && prog.resume());
-    ST.create({ trigger: host, start: "top 85%", end: "bottom 15%", onToggle: (self) => { visible = self.isActive; if (!prog) return; if (visible && !reduce) prog.resume(); else prog.pause(); } });
-    document.addEventListener("langchange", () => { if (cur > -1) render(cur); });
-    if (layer && finePointer && !reduce) {
-      host.addEventListener("pointermove", (e) => {
-        const r = host.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
-        layer.style.transform = `translate3d(${(-x * 18).toFixed(1)}px, ${(-y * 12).toFixed(1)}px, 0)`;
-      });
-      host.addEventListener("pointerleave", () => { layer.style.transform = ""; });
-    }
-    select(0);
-  })();
-
   /* ---------------- About: pick dawn / zenith / dusk ---------------- */
   (function initDirection() {
     const host = $("[data-dir]");
@@ -840,10 +843,10 @@
     const cols = $$(".dir__col", host);
     const clock = $("[data-dir-clock]", host), phase = $("[data-dir-phase]", host), bar = $("[data-dir-progress]", host);
     const S = scene ? scene.state : { p: 0 };
-    let active = 0, tween = null;
+    let active = 0, tween = null, userSelected = false;
 
     const hud = () => {
-      const hrs = 6 + S.p * 12, hh = Math.floor(hrs), mm = Math.floor((hrs - hh) * 60);
+      const minutes = Math.round((6 + S.p * 12) * 60), hh = Math.floor(minutes / 60), mm = minutes % 60;
       if (clock) clock.textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
       if (bar) bar.style.transform = `scaleX(${S.p.toFixed(4)})`;
       if (reduce && scene) scene.redraw();
@@ -852,7 +855,9 @@
       const k = $(".dir__k span", cols[i]);
       if (phase && k) phase.textContent = k.textContent.replace(/^\s*\d\d:\d\d\s*·\s*/, "");
     };
-    const select = (i, focus) => {
+    const select = (i, focus, automatic = false) => {
+      if (automatic && userSelected) return;
+      if (!automatic) userSelected = true;
       active = i;
       cols.forEach((c, k) => {
         const on = k === i;
@@ -882,7 +887,7 @@
     S.p = 0; hud();
     cols.forEach((c, k) => c.classList.toggle("is-active", k === 0));
     label(0);
-    ST.create({ trigger: host, start: "top 75%", once: true, onEnter: () => select(0) });
+    ST.create({ trigger: host, start: "top 75%", once: true, onEnter: () => select(0, false, true) });
   })();
 
   /* ---------------- Hero clock ---------------- */
@@ -946,15 +951,17 @@
     const fields = Array.from(form.querySelectorAll(".field input, .field textarea, .field select"));
     const sync = (f) => f.closest(".field").classList.toggle("is-filled", !!f.value);
     fields.forEach((f) => {
+      const error = f.closest(".field").querySelector(".field__err");
+      if (error) { error.id = `${f.id}-error`; f.setAttribute("aria-describedby", error.id); }
       sync(f);
       f.addEventListener("input", () => { sync(f); clearErr(f); });
       f.addEventListener("change", () => { sync(f); clearErr(f); });
       f.addEventListener("blur", () => sync(f));
     });
     const consent = form.querySelector("[name=kvkk]");
-    if (consent) consent.addEventListener("change", () => consent.closest(".consent").classList.remove("is-invalid"));
-    function clearErr(f) { const w = f.closest(".field"); w.classList.remove("is-invalid"); const e = w.querySelector(".field__err"); if (e) e.textContent = ""; }
-    function err(f, key, fb) { const w = f.closest(".field"); w.classList.add("is-invalid"); const e = w.querySelector(".field__err"); if (e) e.textContent = T(key, fb); }
+    if (consent) consent.addEventListener("change", () => { consent.closest(".consent").classList.remove("is-invalid"); consent.removeAttribute("aria-invalid"); });
+    function clearErr(f) { const w = f.closest(".field"); w.classList.remove("is-invalid"); f.removeAttribute("aria-invalid"); const e = w.querySelector(".field__err"); if (e) e.textContent = ""; }
+    function err(f, key, fb) { const w = f.closest(".field"); w.classList.add("is-invalid"); f.setAttribute("aria-invalid", "true"); const e = w.querySelector(".field__err"); if (e) e.textContent = T(key, fb); }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -970,10 +977,10 @@
       need("name", "form.err.name", "Lütfen adınızı yazın.");
       need("email", "form.err.email", "Geçerli bir e-posta adresi yazın.", (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v));
       need("message", "form.err.msg", "Kısaca ihtiyacınızı anlatın.");
-      if (consent && !consent.checked) { consent.closest(".consent").classList.add("is-invalid"); ok = false; first = first || consent; }
+      if (consent && !consent.checked) { consent.closest(".consent").classList.add("is-invalid"); consent.setAttribute("aria-invalid", "true"); ok = false; first = first || consent; }
       if (!ok) {
         status.classList.add("is-err"); status.textContent = T("form.err.all", "Lütfen işaretli alanları kontrol edin.");
-        if (first) first.focus({ preventScroll: true });
+        if (first) { first.focus({ preventScroll: true }); scrollTo(first, -(barH() + 60)); }
         return;
       }
       const data = Object.fromEntries(new FormData(form).entries());
@@ -1014,6 +1021,7 @@
   document.addEventListener("langchange", () => {
     $$("[data-scramble]").forEach((el) => cancelAnimationFrame(el._scr || 0));
     initInk();
+    initStaggers();
     $$("[data-marquee]").forEach((m) => m._langRefresh && m._langRefresh());
     Sound.setLabel();
     if (Diagram) Diagram.render();

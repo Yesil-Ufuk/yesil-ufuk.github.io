@@ -106,13 +106,13 @@ window.SITE = {
     <div class="progress" aria-hidden="true"><i data-progress></i></div>
   </header>
 
-  <div class="mnav" id="mnav" data-mnav aria-hidden="true">
+  <div class="mnav" id="mnav" data-mnav data-lenis-prevent aria-hidden="true" inert>
     <ul class="mnav__list">
-      <li><a href="index.html"><span class="n mono">00</span><span data-i18n="nav.home">Ana Sayfa</span></a></li>
-      <li><a href="hizmetler.html"><span class="n mono">01</span><span data-i18n="nav.services">Hizmetler</span></a></li>
-      <li><a href="hakkimizda.html"><span class="n mono">02</span><span data-i18n="nav.about">Hakkımızda</span></a></li>
+      <li><a href="index.html"${cur("home")}><span class="n mono">00</span><span data-i18n="nav.home">Ana Sayfa</span></a></li>
+      <li><a href="hizmetler.html"${cur("services")}><span class="n mono">01</span><span data-i18n="nav.services">Hizmetler</span></a></li>
+      <li><a href="hakkimizda.html"${cur("about")}><span class="n mono">02</span><span data-i18n="nav.about">Hakkımızda</span></a></li>
       <li><a href="iletisim.html#surec"><span class="n mono">03</span><span data-i18n="nav.process">Süreç</span></a></li>
-      <li><a href="iletisim.html"><span class="n mono">04</span><span data-i18n="nav.contact">İletişim</span></a></li>
+      <li><a href="iletisim.html"${cur("contact")}><span class="n mono">04</span><span data-i18n="nav.contact">İletişim</span></a></li>
     </ul>
     <div class="mnav__foot">
       ${langBtns}
@@ -205,6 +205,7 @@ window.SITE = {
     document.querySelectorAll("[data-site-phone]").forEach((a) => { a.href = `tel:${S.phone.replace(/\s/g, "")}`; a.textContent = S.phone; });
   }
   const q = encodeURIComponent(S.mapQuery);
+  if (S.formEndpoint) document.querySelectorAll("[data-mail-notice]").forEach((el) => { el.hidden = true; });
   document.querySelectorAll("[data-site-map]").forEach((m) => { const u = `https://maps.google.com/maps?q=${q}&z=15&output=embed`; if (m.getAttribute("src") !== u) m.src = u; });
   document.querySelectorAll("[data-site-maplink]").forEach((m) => { m.href = `https://www.google.com/maps/search/?api=1&query=${q}`; });
 })();

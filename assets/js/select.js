@@ -32,11 +32,12 @@
 
     const btn = wrap.querySelector(".dd__btn");
     const val = wrap.querySelector(".dd__val");
+    val.id = `${uid}-value`;
     const list = wrap.querySelector(".dd__panel");
     if (label) {
       label.id = label.id || `${uid}-label`;
       label.htmlFor = btn.id;
-      btn.setAttribute("aria-labelledby", `${label.id} ${btn.id}`);
+      btn.setAttribute("aria-labelledby", `${label.id} ${val.id}`);
       list.setAttribute("aria-labelledby", label.id);
     }
 

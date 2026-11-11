@@ -16,7 +16,7 @@
   if (!canvas || !img) return;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const IMG_ASPECT = 16 / 9;
+  let imageAspect = 16 / 9;
   const HY = 0.5056;                 // horizon, image uv (from top)
   const SUN = [0.625, 0.505];        // sun centre, image uv
   const FOCUS = [0.62, 0.5];         // keep the sun in frame when cropping (matches CSS object-position)
@@ -181,19 +181,33 @@ void main(){
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (visible && !document.hidden) raf = requestAnimationFrame(frame);
   };
-  const start = () => { cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(frame); };
+  let ready = false;
+  const stop = () => { cancelAnimationFrame(raf); last = 0; };
+  const start = () => { stop(); if (ready && visible && !document.hidden) raf = requestAnimationFrame(frame); };
 
-  const photo = img.complete && img.naturalWidth ? Promise.resolve(img.currentSrc || img.src) : new Promise((r) => img.addEventListener("load", () => r(img.currentSrc || img.src), { once: true }));
-  photo.then((src) => Promise.all([load(src), load("assets/img/hero-mask.png")])).then(([ph, mk]) => {
+  const sources = location.protocol === "file:" ? new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "assets/js/hero-file-textures.js";
+    script.onload = () => resolve(window.YU_HERO_TEXTURES);
+    script.onerror = reject;
+    document.head.appendChild(script);
+  }) : new Promise((resolve, reject) => {
+    const done = () => resolve({ photo: img.currentSrc || img.src, mask: "assets/img/hero-mask.png" });
+    if (img.complete) { if (img.naturalWidth) done(); else reject(); }
+    else { img.addEventListener("load", done, { once: true }); img.addEventListener("error", reject, { once: true }); }
+  });
+  sources.then((src) => Promise.all([load(src.photo), load(src.mask)])).then(([ph, mk]) => {
+    imageAspect = ph.naturalWidth / ph.naturalHeight;
     texture(0, ph, true); texture(1, mk, true);
     gl.uniform1i(U.uImg, 0); gl.uniform1i(U.uMask, 1);
-    gl.uniform1f(U.uImgAspect, IMG_ASPECT); gl.uniform1f(U.uHY, HY);
+    gl.uniform1f(U.uImgAspect, imageAspect); gl.uniform1f(U.uHY, HY);
     gl.uniform2f(U.uSun, SUN[0], SUN[1]);
     resize();
     let rt;
     window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(resize, 120); }, { passive: true });
-    new IntersectionObserver((ents) => { visible = ents[0].isIntersecting; if (visible) start(); }).observe(canvas);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden && visible) start(); });
+    ready = true;
+    new IntersectionObserver((ents) => { visible = ents[0].isIntersecting; if (visible) start(); else stop(); }).observe(canvas);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && visible) start(); else stop(); });
     canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); cancelAnimationFrame(raf); canvas.classList.remove("is-live"); }, false);
     start();
     requestAnimationFrame(() => canvas.classList.add("is-live"));
