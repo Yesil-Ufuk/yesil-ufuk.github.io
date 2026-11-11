@@ -45,17 +45,17 @@ window.SITE = {
     kurulus: "Şirket Kuruluşu &amp; Organizasyon",
     strateji: "Stratejik Yönetim",
     operasyon: "Operasyon &amp; Süreç Yönetimi",
-    finans: "Finansal Yönetim Danışmanlığı",
-    turizm: "Turizm &amp; Konaklama Danışmanlığı",
-    insaat: "İnşaat &amp; Proje Yönetimi Danışmanlığı"
+    finans: "Finansal Yönetim",
+    turizm: "Turizm &amp; Konaklama",
+    insaat: "İnşaat &amp; Proje Yönetimi"
   };
   const svcDesc = {
-    kurulus: "Doğru şirket türü ve net bir kuruluş planı.",
+    kurulus: "Şirket türü, kuruluş planı ve ilk organizasyon.",
     strateji: "İş planı, fizibilite ve büyüme yol haritası.",
     operasyon: "Roller, iş akışları ve performans göstergeleri.",
     finans: "Bütçe, maliyet analizi ve yönetim raporlaması.",
-    turizm: "Otel, acente ve turizm işletmeleri için konsept, kuruluş ve operasyon.",
-    insaat: "Proje geliştirme, fizibilite, planlama ve süreç takibi."
+    turizm: "Konsept, operasyon ve misafir deneyimi.",
+    insaat: "Fizibilite, bütçe–takvim ve teslim kontrolü."
   };
 
   const langBtns = `

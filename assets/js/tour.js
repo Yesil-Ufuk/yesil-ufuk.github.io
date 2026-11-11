@@ -20,6 +20,8 @@
     panel.querySelector("[data-tour-k]").textContent = `${String(current + 1).padStart(2, "0")} / ${String(tabs.length).padStart(2, "0")}`;
     panel.querySelector("[data-tour-t]").textContent = tab.querySelector("b").textContent;
     panel.querySelector("[data-tour-d]").textContent = tab.querySelector(".tour__src").textContent;
+    const link = panel.querySelector("[data-tour-link]");
+    if (link && tab.dataset.href) link.href = tab.dataset.href;
     const label = window.I18N ? window.I18N.t(playing ? "tour.pause" : "tour.play") : (playing ? "Slaytı duraklat" : "Slaytı oynat");
     toggle.querySelector("span").textContent = label;
     toggle.setAttribute("aria-label", label);
